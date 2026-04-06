@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hortzman Gas — POS System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #043e80;
+  --blue: #2c586e;
+  --bg: #e9efe6;
+  --bg2: #bed0db;
+  --accent: #dd9f52;
+  --teal: #0c7af7;
+  --gray: #bdc3ce;
+  --beige: #dcc894;
+  --red: #e44d4d;
+  --green: #6b8f54;
+  --white: #ffffff;
+  --text: #1a2a36;
+  --text2: #4a6070;
+  --text3: #7a90a0;
+  --border: #ccd8e0;
+  --card: #ffffff;
+  --sidebar: #043e80;
+  --sidebar-text: rgba(255,255,255,0.75);
+  --sidebar-active: rgba(255,255,255,0.12);
+  --shadow: 0 2px 8px rgba(4,62,128,0.08);
+  --shadow-lg: 0 8px 32px rgba(4,62,128,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;}
+input,select,textarea,button{font-family:'DM Sans',sans-serif;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:linear-gradient(135deg,#043e80 0%,#2c586e 60%,#0c7af7 100%);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-card{background:white;border-radius:20px;padding:40px 36px;width:360px;box-shadow:0 24px 60px rgba(4,62,128,0.3);}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.login-logo-icon{width:44px;height:44px;background:var(--navy);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.login-logo-icon svg{width:24px;height:24px;fill:white;}
+.login-logo-name{font-size:18px;font-weight:600;color:var(--navy);}
+.login-logo-sub{font-size:11px;color:var(--text3);}
+.login-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block;}
+.login-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);margin-bottom:16px;transition:border 0.2s;}
+.login-input:focus{outline:none;border-color:var(--navy);}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+.role-tab{padding:10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;font-size:13px;color:var(--text2);transition:all 0.15s;}
+.role-tab.active{border-color:var(--navy);background:#eef3fa;color:var(--navy);font-weight:500;}
+.login-btn{width:100%;padding:13px;background:var(--navy);color:white;border:none;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;transition:background 0.2s;}
+.login-btn:hover{background:#0c7af7;}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;text-align:center;min-height:18px;}
+
+/* APP SHELL */
+#app{display:none;min-height:100vh;flex-direction:column;}
+#app.visible{display:flex;}
+.top-bar{background:var(--navy);color:white;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.top-brand{display:flex;align-items:center;gap:10px;}
+.top-brand-icon{width:32px;height:32px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.top-brand-icon svg{width:18px;height:18px;fill:white;}
+.top-brand-name{font-size:15px;font-weight:600;}
+.top-brand-sub{font-size:10px;opacity:0.6;margin-top:1px;}
+.top-right{display:flex;align-items:center;gap:16px;font-size:13px;opacity:0.85;}
+.top-clock{font-family:'DM Mono',monospace;font-size:13px;}
+.top-user{display:flex;align-items:center;gap:8px;}
+.top-dot{width:7px;height:7px;border-radius:50%;background:#6b8f54;}
+.logout-btn{padding:5px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.3);background:transparent;color:white;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.logout-btn:hover{background:rgba(255,255,255,0.12);}
+.main-layout{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:200px;background:var(--blue);flex-shrink:0;display:flex;flex-direction:column;padding:12px 0;}
+.nav-group-label{font-size:10px;font-weight:500;color:rgba(255,255,255,0.35);letter-spacing:0.08em;text-transform:uppercase;padding:12px 16px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--sidebar-text);font-size:13px;font-weight:400;transition:all 0.15s;border-left:3px solid transparent;margin:1px 0;}
+.nav-item:hover{background:var(--sidebar-active);color:white;}
+.nav-item.active{background:var(--sidebar-active);color:white;border-left-color:var(--accent);font-weight:500;}
+.nav-item svg{width:16px;height:16px;fill:currentColor;opacity:0.8;flex-shrink:0;}
+.nav-item.active svg{opacity:1;}
+.sidebar-spacer{flex:1;}
+.sidebar-version{padding:12px 16px;font-size:10px;color:rgba(255,255,255,0.25);}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:24px;}
+.page{display:none;}
+.page.active{display:block;}
+.page-title{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:22px;}
+
+/* CARDS */
+.card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);}
+.card-title{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow);}
+.metric-label{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:6px;}
+.metric-val{font-size:22px;font-weight:600;color:var(--navy);}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+.metric-card.accent{border-top:3px solid var(--accent);}
+.metric-card.green{border-top:3px solid var(--green);}
+.metric-card.red{border-top:3px solid var(--red);}
+.metric-card.teal{border-top:3px solid var(--teal);}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:9px;border:none;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--navy);color:white;}
+.btn-primary:hover{background:#0c7af7;}
+.btn-accent{background:var(--accent);color:white;}
+.btn-accent:hover{opacity:0.88;}
+.btn-green{background:var(--green);color:white;}
+.btn-green:hover{opacity:0.88;}
+.btn-red{background:var(--red);color:white;}
+.btn-red:hover{opacity:0.88;}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text2);}
+.btn-outline:hover{border-color:var(--navy);color:var(--navy);}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+
+/* INPUTS */
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block;}
+.form-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;color:var(--text);background:white;transition:border 0.15s;}
+.form-input:focus{outline:none;border-color:var(--navy);}
+.form-input:read-only{background:#f5f7fa;color:var(--text3);}
+.form-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;color:var(--text);background:white;cursor:pointer;}
+.form-select:focus{outline:none;border-color:var(--navy);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+thead{background:#f0f5fa;}
+th{padding:11px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:0.04em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+td{padding:11px 14px;font-size:13px;border-bottom:1px solid #f0f2f5;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafcff;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-green{background:#eef5e8;color:#4a7032;}
+.badge-red{background:#fdeaea;color:#c03030;}
+.badge-orange{background:#fdf3e3;color:#9a6a15;}
+.badge-blue{background:#e8f1fc;color:#0c56a8;}
+.badge-gray{background:#f0f2f4;color:#5a6a78;}
+.badge-purple{background:#f0e8fc;color:#6030a8;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(4,62,128,0.35);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.modal{background:white;border-radius:16px;width:100%;max-width:560px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:16px;font-weight:600;color:var(--navy);}
+.modal-close{width:28px;height:28px;border-radius:7px;border:none;background:#f0f2f4;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2);}
+.modal-close:hover{background:#e0e3e8;}
+.modal-body{padding:20px 24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+/* SALE PAGE */
+.sale-layout{display:grid;grid-template-columns:1fr 360px;gap:16px;height:calc(100vh - 52px - 48px);overflow:hidden;}
+.products-area{overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.order-area{background:white;border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;}
+.cat-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.cat-pill{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--text2);transition:all 0.15s;white-space:nowrap;}
+.cat-pill.active{background:var(--navy);border-color:var(--navy);color:white;font-weight:500;}
+.cat-pill:hover:not(.active){border-color:var(--navy);color:var(--navy);}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.prod-card{background:white;border:1px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;transition:all 0.15s;position:relative;}
+.prod-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(221,159,82,0.2);transform:translateY(-1px);}
+.prod-card:active{transform:scale(0.97);}
+.prod-icon{font-size:24px;margin-bottom:8px;}
+.prod-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.3;margin-bottom:3px;}
+.prod-brand{font-size:10px;color:var(--text3);margin-bottom:5px;}
+.prod-price{font-size:14px;font-weight:600;color:var(--navy);}
+.in-cart-dot{position:absolute;bottom:8px;right:8px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:white;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+
+/* ORDER PANEL */
+.order-top{padding:14px 16px;border-bottom:1px solid var(--border);}
+.order-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.order-num{font-size:12px;font-weight:600;color:var(--text3);font-family:'DM Mono',monospace;}
+.order-items-wrap{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px;}
+.empty-order{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;}
+.order-item-row{background:#f7fafd;border:1px solid var(--border);border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
+.oi-info{flex:1;}
+.oi-name{font-size:13px;font-weight:500;color:var(--text);}
+.oi-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.oi-qty-ctrl{display:flex;align-items:center;gap:5px;}
+.qty-b{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text);transition:all 0.1s;}
+.qty-b:hover{border-color:var(--navy);color:var(--navy);}
+.qty-n{font-size:13px;font-weight:500;min-width:22px;text-align:center;}
+.oi-total{font-size:13px;font-weight:600;color:var(--navy);min-width:60px;text-align:right;}
+.oi-del{cursor:pointer;color:var(--text3);font-size:13px;padding:3px;border-radius:4px;transition:all 0.1s;}
+.oi-del:hover{color:var(--red);background:#fdeaea;}
+.order-foot{padding:12px 14px;border-top:1px solid var(--border);}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:5px;}
+.sum-row.total{font-size:15px;font-weight:600;color:var(--navy);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;}
+.pay-btn{padding:9px;border-radius:9px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;text-align:center;background:transparent;color:var(--text2);transition:all 0.15s;font-weight:400;}
+.pay-btn:hover{border-color:var(--accent);color:var(--accent);}
+.pay-btn.sel{background:#fdf3e3;border-color:var(--accent);color:#9a6a15;font-weight:500;}
+.pay-btn.credit-sel{background:#e8f1fc;border-color:var(--teal);color:#0c56a8;font-weight:500;}
+.charge-btn{width:100%;padding:13px;border-radius:11px;border:none;background:var(--navy);color:white;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;margin-top:8px;}
+.charge-btn:hover{background:#0c7af7;}
+.charge-btn:disabled{background:var(--gray);cursor:not-allowed;}
+.due-fields{background:#eef5fe;border-radius:9px;padding:10px 12px;margin:8px 0;display:none;}
+.due-label{font-size:11px;color:#0c56a8;font-weight:500;margin-bottom:6px;}
+
+/* CREDIT LOG */
+.credit-row-urgent{background:#fff5f5;}
+.credit-row-today{background:#fffbf0;}
+
+/* SEARCH BOX */
+.search-box{padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;color:var(--text);width:100%;}
+.search-box:focus{outline:none;border-color:var(--navy);}
+
+/* TABS */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 16px;font-size:13px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;}
+.tab.active{color:var(--navy);border-bottom-color:var(--navy);font-weight:500;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:white;border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;z-index:5000;transform:translateY(60px);opacity:0;transition:all 0.25s;box-shadow:var(--shadow-lg);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-left:4px solid var(--green);}
+.toast.error{border-left:4px solid var(--red);}
+.toast.info{border-left:4px solid var(--teal);}
+
+/* MISC */
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.text-red{color:var(--red);}
+.text-green{color:var(--green);}
+.text-accent{color:var(--accent);}
+.text-navy{color:var(--navy);}
+.text-muted{color:var(--text3);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.mb-16{margin-bottom:16px;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.flex-gap{display:flex;align-items:center;gap:10px;}
+.section-break{height:20px;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+
+/* DISPATCH */
+.dispatch-status-dispatched{background:#e8f1fc;color:#0c56a8;}
+.dispatch-status-returned{background:#eef5e8;color:#4a7032;}
+.dispatch-status-partial{background:#fdf3e3;color:#9a6a15;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C7 2 4 6 4 10c0 5 5 10 8 12 3-2 8-7 8-12 0-4-3-8-8-8zm0 10a3 3 0 110-6 3 3 0 010 6z"/></svg>
+      </div>
+      <div>
+        <div class="login-logo-name">Hortzman Gas</div>
+        <div class="login-logo-sub">Point of Sale System</div>
+      </div>
+    </div>
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="selectRole('cashier',this)">Cashier</div>
+      <div class="role-tab" onclick="selectRole('admin',this)">Admin / Owner</div>
+    </div>
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="loginPass" placeholder="Enter your password">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="loginErr"></div>
+    <div style="margin-top:16px;font-size:11px;color:#b0b8c4;text-align:center;">Demo: cashier = <b>1234</b> &nbsp;|&nbsp; admin = <b>admin123</b></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="top-bar">
+    <div class="top-brand">
+      <div class="top-brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C7 2 4 6 4 10c0 5 5 10 8 12 3-2 8-7 8-12 0-4-3-8-8-8zm0 10a3 3 0 110-6 3 3 0 010 6z"/></svg>
+      </div>
+      <div>
+        <div class="top-brand-name">Hortzman Gas</div>
+        <div class="top-brand-sub">Nairobi, Kenya</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span id="topClock" class="top-clock">00:00:00</span>
+      <span id="topDate" style="font-size:12px;opacity:0.7;"></span>
+      <div class="top-user">
+        <div class="top-dot"></div>
+        <span id="topUserName">—</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-group-label">Sales</div>
+      <div class="nav-item active" onclick="nav('sale',this)">
+        <svg viewBox="0 0 24 24"><path d="M7 4h-2l-3 9v7h18v-7l-3-9H7zm0 0V2m10 2V2M3 13h18"/></svg> New Sale
+      </div>
+      <div class="nav-item" onclick="nav('credit',this)">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm-9 11H7v-2h4v2zm6-4H7V9h10v2z"/></svg> Credit Book
+      </div>
+      <div class="nav-item" onclick="nav('customers',this)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m22 0v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M9 7a4 4 0 110 8 4 4 0 010-8z"/></svg> Customers
+      </div>
+      <div class="nav-item" onclick="nav('inventory',this)">
+        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4v10l8 4 8-4V7zm-8 4L4 7m8 4v9m8-13l-8 4"/></svg> Inventory
+      </div>
+      <div class="nav-item" onclick="nav('dispatch',this)">
+        <svg viewBox="0 0 24 24"><path d="M1 3h15v13H1zm15 5h4l3 3v5h-7V8zM1 18h3m13 0h3m-8 0h3"/></svg> Refill Dispatch
+      </div>
+      <div class="nav-group-label" id="adminNavLabel">Management</div>
+      <div class="nav-item admin-only" onclick="nav('pricing',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 1l3 6 6 1-4.5 4.5 1 6.5L12 17l-5.5 2.5 1-6.5L3 8l6-1z"/></svg> Pricing
+      </div>
+      <div class="nav-item admin-only" onclick="nav('overheads',this)">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zm0 7h18v4H3zm0 7h18v4H3z"/></svg> Overheads
+      </div>
+      <div class="nav-item admin-only" onclick="nav('reports',this)">
+        <svg viewBox="0 0 24 24"><path d="M18 20V10m-6 10V4M6 20v-6"/></svg> Reports
+      </div>
+      <div class="nav-item admin-only" onclick="nav('settings',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zm0 0v3m0-12V3m9 9h-3M6 12H3m15.36 6.36l-2.12-2.12M6.76 6.76L4.64 4.64m16.96 0l-2.12 2.12M6.76 17.24L4.64 19.36"/></svg> Settings
+      </div>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-version">v2.0.0 · Hortzman Gas</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- SALE PAGE -->
+      <div id="page-sale" class="page active">
+        <div class="sale-layout">
+          <div class="products-area">
+            <div class="card" style="padding:14px;">
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+                <input class="search-box" placeholder="🔍 Search products..." id="prodSearch" oninput="renderProducts()" style="flex:1;">
+              </div>
+              <div class="cat-pills" id="catPills">
+                <div class="cat-pill active" onclick="setCat('all',this)">All</div>
+                <div class="cat-pill" onclick="setCat('lpg',this)">LPG Gas</div>
+                <div class="cat-pill" onclick="setCat('refill',this)">Refills</div>
+                <div class="cat-pill" onclick="setCat('appliance',this)">Appliances</div>
+                <div class="cat-pill" onclick="setCat('accessory',this)">Accessories</div>
+                <div class="cat-pill" onclick="setCat('safety',this)">Safety</div>
+              </div>
+            </div>
+            <div class="prod-grid" id="prodGrid"></div>
+          </div>
+
+          <div class="order-area">
+            <div class="order-top">
+              <div class="order-head-row">
+                <span style="font-size:14px;font-weight:600;color:var(--navy);">Current Order</span>
+                <span class="order-num" id="orderNum">#001</span>
+              </div>
+              <div class="form-group" style="margin-bottom:8px;position:relative;">
+                <input class="form-input" id="custSearch" placeholder="Customer name or phone..." oninput="searchCustomer()" autocomplete="off">
+                <div id="custDropdown" style="display:none;position:absolute;background:white;border:1px solid var(--border);border-radius:9px;width:100%;box-shadow:var(--shadow-lg);z-index:100;max-height:150px;overflow-y:auto;top:100%;left:0;"></div>
+              </div>
+            </div>
+            <div class="order-items-wrap" id="orderItems">
+              <div class="empty-order">
+                <div style="font-size:32px;margin-bottom:8px;">🔵</div>
+                <div style="font-weight:500;margin-bottom:4px;">Order is empty</div>
+                <div style="font-size:12px;">Click a product to add it</div>
+              </div>
+            </div>
+            <div class="order-foot">
+              <div class="sum-row"><span>Subtotal</span><span id="sumSub">KES 0</span></div>
+              <div class="sum-row" id="delivRow" style="display:none;"><span style="color:var(--text3);">Delivery</span><span id="sumDel">KES 0</span></div>
+              <div class="sum-row total"><span>Total</span><span id="sumTotal">KES 0</span></div>
+              <div style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:var(--text2);">
+                <input type="checkbox" id="delivChk" onchange="toggleDelivery()" style="accent-color:var(--navy);">
+                <label for="delivChk">Add delivery</label>
+                <input type="number" id="delivAmt" value="50" min="0" max="9999" style="width:70px;padding:4px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;" oninput="updateOrderTotals()">
+                <span>KES</span>
+              </div>
+              <div class="pay-grid">
+                <div class="pay-btn sel" onclick="selPay(this,'cash')">Cash</div>
+                <div class="pay-btn" onclick="selPay(this,'mpesa')">M-Pesa</div>
+                <div class="pay-btn" onclick="selPay(this,'card')">Card</div>
+                <div class="pay-btn" onclick="selPay(this,'credit')">Credit / Later</div>
+              </div>
+              <div class="due-fields" id="dueFields">
+                <div class="due-label">📅 Payment due details</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <input class="form-input" type="date" id="dueDate" style="font-size:12px;padding:7px;">
+                  <input class="form-input" type="text" id="dueNote" placeholder="e.g. pay evening" style="font-size:12px;padding:7px;">
+                </div>
+              </div>
+              <button class="charge-btn" id="chargeBtn" onclick="processPayment()" disabled>Charge — KES 0</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREDIT BOOK -->
+      <div id="page-credit" class="page">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="page-title">Credit Book</div>
+            <div class="page-sub">Outstanding payments & deferred sales</div>
+          </div>
+          <input class="search-box" placeholder="Search credits..." id="creditSearch" oninput="renderCredits()" style="width:200px;">
+        </div>
+        <div class="metric-grid" id="creditMetrics"></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>Items</th><th>Amount</th><th>Promise</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="creditTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div id="page-customers" class="page">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="page-title">Customers</div>
+            <div class="page-sub">Customer database & purchase history</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddCustomer()">+ Add Customer</button>
+        </div>
+        <div class="card">
+          <div style="margin-bottom:12px;"><input class="search-box" placeholder="Search customers..." id="custPageSearch" oninput="renderCustomers()"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Phone</th><th>Total Bought</th><th>Visits</th><th>Last Visit</th><th>Balance</th><th></th></tr></thead>
+              <tbody id="custTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div id="page-inventory" class="page">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="page-title">Inventory</div>
+            <div class="page-sub">Daily stock tracking</div>
+          </div>
+          <div class="flex-gap">
+            <button class="btn btn-outline" onclick="openStockAdjust()">Adjust Stock</button>
+            <button class="btn btn-primary btn-sm" onclick="openDailyCount()">📋 Daily Count</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="tabs">
+            <div class="tab active" onclick="invTab('all',this)">All Items</div>
+            <div class="tab" onclick="invTab('lpg',this)">LPG New</div>
+            <div class="tab" onclick="invTab('refill',this)">Refills</div>
+            <div class="tab" onclick="invTab('appliance',this)">Appliances</div>
+            <div class="tab" onclick="invTab('accessory',this)">Accessories</div>
+            <div class="tab" onclick="invTab('safety',this)">Safety</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Product</th><th>Type</th><th>Stock</th><th>Alert</th><th>BP (KES)</th><th>SP (KES)</th><th>Margin</th><th>Actions</th></tr></thead>
+              <tbody id="invTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REFILL DISPATCH -->
+      <div id="page-dispatch" class="page">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="page-title">Refill Dispatch</div>
+            <div class="page-sub">Track empty cylinders sent out for refilling & their return</div>
+          </div>
+          <button class="btn btn-primary" onclick="openNewDispatch()">+ New Dispatch</button>
+        </div>
+        <div class="metric-grid" id="dispatchMetrics"></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date Sent</th><th>Supplier</th><th>Cylinders Sent</th><th>Total Cost</th><th>Expected Back</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="dispatchTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRICING (ADMIN) -->
+      <div id="page-pricing" class="page">
+        <div class="flex-between mb-16">
+          <div>
+            <div class="page-title">Pricing Management</div>
+            <div class="page-sub">Set buying & selling prices for all products</div>
+          </div>
+        </div>
+        <!-- Refill BP global setting -->
+        <div class="card mb-16" style="border-left:4px solid var(--accent);">
+          <div class="card-title" style="margin-bottom:10px;">🔄 Refill Buying Price (Global Setting)</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:260px;">
+              <div style="font-size:13px;color:var(--text2);margin-bottom:6px;">Cost per kg when refilling cylinders at the depot</div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:13px;color:var(--text2);">KES</span>
+                <input type="number" id="refillBpPerKg" value="170" min="1" style="width:100px;padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-size:15px;font-weight:600;font-family:'DM Mono',monospace;">
+                <span style="font-size:13px;color:var(--text2);">per kg</span>
+                <button class="btn btn-accent" onclick="applyRefillBP()">Apply to All Refills</button>
+              </div>
+            </div>
+            <div style="background:#fdf3e3;border-radius:10px;padding:12px 16px;font-size:12px;color:#7a5020;">
+              <div style="font-weight:600;margin-bottom:4px;">Current refill costs at 170 KES/kg:</div>
+              <div id="refillBpPreview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="margin-bottom:12px;">
+            <input class="search-box" placeholder="Search products..." id="pricingSearch" oninput="renderPricing()" style="width:280px;">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Product</th><th>Type</th><th>Buying Price</th><th>Selling Price</th><th>Margin</th><th>Margin %</th><th>Save</th></tr></thead>
+              <tbody id="pricingTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OVERHEADS (ADMIN) -->
+      <div id="page-overheads" class="page">
+        <div class="page-title">Overheads & Fixed Costs</div>
+        <div class="page-sub">Track all fixed monthly costs the business must cover</div>
+        <div class="grid-2 mb-16">
+          <div class="card">
+            <div class="card-title">Monthly Fixed Costs
+              <button class="btn btn-sm btn-outline" onclick="addOverhead()">+ Add</button>
+            </div>
+            <div id="overheadList"></div>
+            <div class="divider"></div>
+            <div class="flex-between" style="font-size:15px;font-weight:600;color:var(--navy);">
+              <span>Total Monthly</span><span id="overheadTotal">KES 0</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Cost Coverage Calculator</div>
+            <div id="overheadCalc"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Overhead Projections</div>
+          <div id="overheadProjections"></div>
+        </div>
+      </div>
+
+      <!-- REPORTS (ADMIN) -->
+      <div id="page-reports" class="page">
+        <div class="page-title">Business Reports</div>
+        <div class="page-sub">Sales performance & financial overview</div>
+        <div class="card mb-16">
+          <div class="flex-gap" style="margin-bottom:16px;">
+            <select class="form-select" id="reportPeriod" onchange="renderReports()" style="width:180px;">
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month" selected>This Month</option>
+              <option value="halfyear">6 Months</option>
+              <option value="year">Full Year</option>
+            </select>
+          </div>
+          <div class="metric-grid" id="reportMetrics"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Sales by Category</div>
+            <div id="catBreakdown"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Top Products</div>
+            <div id="topProducts"></div>
+          </div>
+        </div>
+        <div class="section-break"></div>
+        <div class="card">
+          <div class="card-title">Transaction History</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Order #</th><th>Date & Time</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Cashier</th></tr></thead>
+              <tbody id="txTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS (ADMIN) -->
+      <div id="page-settings" class="page">
+        <div class="page-title">System Settings</div>
+        <div class="page-sub">Configure system passwords and preferences</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Change Passwords</div>
+            <div class="form-group">
+              <label class="form-label">Cashier Password</label>
+              <input class="form-input" type="password" id="newCashierPass" placeholder="New cashier password">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Admin Password</label>
+              <input class="form-input" type="password" id="newAdminPass" placeholder="New admin password">
+            </div>
+            <button class="btn btn-primary" onclick="savePasswords()">Save Passwords</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Supabase Connection</div>
+            <div class="form-group">
+              <label class="form-label">Supabase URL</label>
+              <input class="form-input" id="sbUrl" placeholder="https://xxx.supabase.co">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Supabase Anon Key</label>
+              <input class="form-input" id="sbKey" placeholder="eyJ...">
+            </div>
+            <button class="btn btn-primary" onclick="saveSbSettings()">Connect Database</button>
+            <div id="sbStatus" style="margin-top:10px;font-size:12px;color:var(--text3);">Not connected — using local state</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main-layout -->
+</div><!-- end app -->
+
+<!-- MODAL -->
+<div id="modalOverlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Modal</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// =========================================================
+// STATE
+// =========================================================
+let STATE = {
+  role: null,
+  passwords: { cashier: '1234', admin: 'admin123' },
+  selectedRole: 'cashier',
+  cart: [],
+  payMethod: 'cash',
+  orderCount: 3,
+  activeCat: 'all',
+  activeInvTab: 'all',
+  deliveryEnabled: false,
+  selectedCustomer: null,
+  refillBpPerKg: 170,
+  transactions: [],
+  customers: [],
+  credits: [],
+  dispatches: [],
+  overheads: [
+    { id:1, name:'Shop Rent', amount:4000, frequency:'monthly' },
+    { id:2, name:'Employee Salary (Jane)', amount:7000, frequency:'monthly' },
+    { id:3, name:'Legal / License Fees', amount:2000, frequency:'monthly' },
+    { id:4, name:'Electricity & Water', amount:1500, frequency:'monthly' },
+    { id:5, name:'Internet / Airtime', amount:500, frequency:'monthly' },
+  ],
+  products: [
+    // ---- LPG NEW CYLINDERS ----
+    // K-Gas
+    { id:1,  name:'K-Gas 3kg (New)',          brand:'K-Gas',        cat:'lpg', type:'new',      size:'3kg',  sizeKg:3,  icon:'🔵', bp:510,   sp:700,  stock:8,  alert:3, isRefill:false, exchangeOnly:false },
+    { id:2,  name:'K-Gas 6kg (New)',          brand:'K-Gas',        cat:'lpg', type:'new',      size:'6kg',  sizeKg:6,  icon:'🔵', bp:1020,  sp:1200,  stock:10, alert:3, isRefill:false, exchangeOnly:false },
+    { id:3,  name:'K-Gas 13kg (New)',         brand:'K-Gas',        cat:'lpg', type:'new',      size:'13kg', sizeKg:13, icon:'🔵', bp:2210,  sp:5500,  stock:6,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:4,  name:'K-Gas 50kg (New)',         brand:'K-Gas',        cat:'lpg', type:'new',      size:'50kg', sizeKg:50, icon:'🔵', bp:8500, sp:9000, stock:3,  alert:1, isRefill:false, exchangeOnly:false },
+    // TotalGaz
+    { id:5,  name:'TotalGaz 3kg (New)',       brand:'TotalGaz',     cat:'lpg', type:'new',      size:'3kg',  sizeKg:3,  icon:'🔵', bp:510,   sp:700,  stock:5,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:6,  name:'TotalGaz 6kg (New)',       brand:'TotalGaz',     cat:'lpg', type:'new',      size:'6kg',  sizeKg:6,  icon:'🔵', bp:1020,  sp:1200,  stock:8,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:7,  name:'TotalGaz 13kg (New)',      brand:'TotalGaz',     cat:'lpg', type:'new',      size:'13kg', sizeKg:13, icon:'🔵', bp:2210,  sp:5700,  stock:5,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:8,  name:'TotalGaz 50kg (New)',      brand:'TotalGaz',     cat:'lpg', type:'new',      size:'50kg', sizeKg:50, icon:'🔵', bp:8500,  sp:9000, stock:2,  alert:1, isRefill:false, exchangeOnly:false },
+    // Shell Afrigas
+    { id:9,  name:'Shell Afrigas 3kg (New)',  brand:'Shell Afrigas',cat:'lpg', type:'new',      size:'3kg',  sizeKg:3,  icon:'🔵', bp:510,   sp:700,  stock:4,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:10, name:'Shell Afrigas 6kg (New)',  brand:'Shell Afrigas',cat:'lpg', type:'new',      size:'6kg',  sizeKg:6,  icon:'🔵', bp:1020,  sp:1200,  stock:5,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:11, name:'Shell Afrigas 13kg (New)', brand:'Shell Afrigas',cat:'lpg', type:'new',      size:'13kg', sizeKg:13, icon:'🔵', bp:2210,  sp:2600,  stock:4,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:12, name:'Shell Afrigas 50kg (New)', brand:'Shell Afrigas',cat:'lpg', type:'new',      size:'50kg', sizeKg:50, icon:'🔵', bp:8500,  sp:9000, stock:2,  alert:1, isRefill:false, exchangeOnly:false },
+    // Oilibya
+    { id:13, name:'Oilibya 3kg (New)',        brand:'Oilibya',      cat:'lpg', type:'new',      size:'3kg',  sizeKg:3,  icon:'🔵', bp:510,   sp:700,  stock:4,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:14, name:'Oilibya 6kg (New)',        brand:'Oilibya',      cat:'lpg', type:'new',      size:'6kg',  sizeKg:6,  icon:'🔵', bp:1020,  sp:1200,  stock:7,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:15, name:'Oilibya 13kg (New)',       brand:'Oilibya',      cat:'lpg', type:'new',      size:'13kg', sizeKg:13, icon:'🔵', bp:2210,  sp:2600,  stock:4,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:16, name:'Oilibya 50kg (New)',       brand:'Oilibya',      cat:'lpg', type:'new',      size:'50kg', sizeKg:50, icon:'🔵', bp:8500,  sp:9000, stock:2,  alert:1, isRefill:false, exchangeOnly:false },
+    // ProGas
+    { id:17, name:'ProGas 3kg (New)',         brand:'ProGas',       cat:'lpg', type:'new',      size:'3kg',  sizeKg:3,  icon:'🔵', bp:510,   sp:700,  stock:4,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:18, name:'ProGas 6kg (New)',         brand:'ProGas',       cat:'lpg', type:'new',      size:'6kg',  sizeKg:6,  icon:'🔵', bp:1020,  sp:1200,  stock:5,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:19, name:'ProGas 13kg (New)',        brand:'ProGas',       cat:'lpg', type:'new',      size:'13kg', sizeKg:13, icon:'🔵', bp:2210,  sp:2600,  stock:5,  alert:2, isRefill:false, exchangeOnly:false },
+    { id:20, name:'ProGas 50kg (New)',        brand:'ProGas',       cat:'lpg', type:'new',      size:'50kg', sizeKg:50, icon:'🔵', bp:8500,  sp:9000, stock:2,  alert:1, isRefill:false, exchangeOnly:false },
+    // Composite
+    { id:21, name:'Composite Cylinder 13kg', brand:'Any',           cat:'lpg', type:'new',      size:'13kg', sizeKg:13, icon:'🔵', bp:6500,  sp:7800,  stock:4,  alert:1, isRefill:false, exchangeOnly:false },
+
+    // ---- REFILLS (bp = 170/kg × size, auto-recalculated) ----
+    { id:22, name:'Refill 3kg',              brand:'Any',           cat:'refill', type:'refill', size:'3kg',  sizeKg:3,  icon:'🔄', bp:510,   sp:700,   stock:99, alert:10, isRefill:true, exchangeOnly:false },
+    { id:23, name:'Refill 6kg',              brand:'Any',           cat:'refill', type:'refill', size:'6kg',  sizeKg:6,  icon:'🔄', bp:1020,  sp:1200,  stock:99, alert:10, isRefill:true, exchangeOnly:false },
+    { id:24, name:'Refill 13kg',             brand:'Any',           cat:'refill', type:'refill', size:'13kg', sizeKg:13, icon:'🔄', bp:2210,  sp:2600,  stock:99, alert:10, isRefill:true, exchangeOnly:false },
+    { id:25, name:'Refill 50kg',             brand:'Any',           cat:'refill', type:'refill', size:'50kg', sizeKg:50, icon:'🔄', bp:8500,  sp:9000,  stock:20, alert:5,  isRefill:true, exchangeOnly:false },
+
+    // ---- EXCHANGE ----
+    { id:26, name:'Mix Exchange 6kg',        brand:'Mix',           cat:'refill', type:'exchange',size:'6kg', sizeKg:6,  icon:'🔃', bp:1020,   sp:1200,   stock:15, alert:5, isRefill:false, exchangeOnly:true },
+    { id:27, name:'Mix Exchange 13kg',       brand:'Mix',           cat:'refill', type:'exchange',size:'13kg',sizeKg:13, icon:'🔃', bp:2210,   sp:2600,  stock:12, alert:4, isRefill:false, exchangeOnly:true },
+
+    // ---- APPLIANCES ----
+    { id:28, name:'Single Burner Stove',     brand:'Meko',          cat:'appliance', icon:'🍳', bp:650,  sp:950,   stock:10, alert:3 },
+    { id:29, name:'Double Burner Stove',     brand:'Meko',          cat:'appliance', icon:'🍳', bp:1800, sp:2500,  stock:8,  alert:2 },
+    { id:30, name:'4-Burner Cooker',         brand:'Meko Plus',     cat:'appliance', icon:'🍳', bp:8500, sp:11500, stock:4,  alert:1 },
+    { id:31, name:'Portable Camping Stove',  brand:'Various',       cat:'appliance', icon:'🏕️', bp:800,  sp:1200,  stock:6,  alert:2 },
+    { id:32, name:'Grill / Multi-Burner',    brand:'Various',       cat:'appliance', icon:'🔥', bp:4500, sp:6500,  stock:3,  alert:1 },
+
+    // ---- ACCESSORIES ----
+    { id:33, name:'Meko Regulator',          brand:'Meko',          cat:'accessory', icon:'🔧', bp:350, sp:550,  stock:20, alert:5 },
+    { id:34, name:'Low-Pressure Regulator',  brand:'Generic',       cat:'accessory', icon:'🔧', bp:280, sp:450,  stock:18, alert:5 },
+    { id:35, name:'High-Pressure Regulator', brand:'Generic',       cat:'accessory', icon:'🔧', bp:450, sp:700,  stock:12, alert:4 },
+    { id:36, name:'Unified Regulator',       brand:'Generic',       cat:'accessory', icon:'🔧', bp:380, sp:600,  stock:10, alert:3 },
+    { id:37, name:'LP Hose 1.5m',            brand:'Safety Cert.',  cat:'accessory', icon:'🌀', bp:180, sp:300,  stock:25, alert:8 },
+    { id:38, name:'HP Hose Pipe',            brand:'Safety Cert.',  cat:'accessory', icon:'🌀', bp:350, sp:550,  stock:15, alert:5 },
+    { id:39, name:'Gas Igniter / Lighter',   brand:'Various',       cat:'accessory', icon:'🔦', bp:80,  sp:150,  stock:30, alert:10 },
+    { id:40, name:'Burner Head & Cap',       brand:'Meko',          cat:'accessory', icon:'⚙️', bp:120, sp:220,  stock:20, alert:6 },
+    { id:41, name:'Cylinder Trolley',        brand:'Generic',       cat:'accessory', icon:'🛒', bp:800, sp:1300, stock:5,  alert:2 },
+    { id:42, name:'Cylinder Stand/Rack',     brand:'Generic',       cat:'accessory', icon:'🗄️', bp:500, sp:850,  stock:8,  alert:3 },
+
+    // ---- SAFETY ----
+    { id:43, name:'LPG Leak Detector (Home)',       brand:'Generic',    cat:'safety', icon:'🔍', bp:1200, sp:1800, stock:8, alert:2 },
+    { id:44, name:'LPG Leak Detector (Industrial)', brand:'Pro',        cat:'safety', icon:'🔍', bp:4500, sp:6500, stock:3, alert:1 },
+    { id:45, name:'Emergency Shut-off Switch',      brand:'Safety Pro', cat:'safety', icon:'🚨', bp:800,  sp:1300, stock:6, alert:2 },
+    { id:46, name:'Fire Extinguisher 2kg',          brand:'Licensed',   cat:'safety', icon:'🧯', bp:1800, sp:2800, stock:5, alert:2 },
+    { id:47, name:'Fire Extinguisher 5kg',          brand:'Licensed',   cat:'safety', icon:'🧯', bp:3200, sp:4800, stock:3, alert:1 },
+  ]
+};
+
+// Demo data
+STATE.customers = [
+  { id:'c1', name:'Mary Wanjiku',  phone:'0712345678', totalBought:18500, visits:12, lastVisit:'2025-04-05', balance:0 },
+  { id:'c2', name:'James Otieno',  phone:'0723456789', totalBought:5200,  visits:4,  lastVisit:'2025-04-03', balance:1500 },
+  { id:'c3', name:'Fatuma Hassan', phone:'0734567890', totalBought:32000, visits:20, lastVisit:'2025-04-06', balance:0 },
+  { id:'c4', name:'Peter Kamau',   phone:'0745678901', totalBought:9800,  visits:7,  lastVisit:'2025-04-01', balance:2800 },
+];
+STATE.credits = [
+  { id:'cr1', custId:'c2', custName:'James Otieno', custPhone:'0723456789', items:'Refill 13kg × 2', amount:3000, promise:'Pay evening', dueDate:new Date().toISOString().split('T')[0], status:'pending', created:new Date().toISOString() },
+  { id:'cr2', custId:'c4', custName:'Peter Kamau',  custPhone:'0745678901', items:'Double Burner Stove × 1, LP Hose 1.5m × 1', amount:2800, promise:'Pay tomorrow', dueDate:new Date(Date.now()+86400000).toISOString().split('T')[0], status:'pending', created:new Date().toISOString() },
+];
+STATE.transactions = [
+  { id:1, date:new Date().toISOString(), customer:'Mary Wanjiku', items:'Refill 13kg, LP Hose 1.5m', total:1800, payment:'mpesa', cashier:'Jane M.' },
+  { id:2, date:new Date(Date.now()-3600000).toISOString(), customer:'Walk-in', items:'K-Gas 6kg (New)', total:2800, payment:'cash', cashier:'Jane M.' },
+];
+STATE.dispatches = [
+  {
+    id:'d1', date: new Date().toISOString().split('T')[0],
+    expectedBack: new Date(Date.now()+86400000).toISOString().split('T')[0],
+    actualBack: null, supplier:'K-Gas Depot Nairobi', notes:'Morning batch',
+    status:'dispatched', createdBy:'Jane M.',
+    items:[
+      { size:'3kg',  sizeKg:3,  brand:'K-Gas', qtySent:10, qtyReturned:0, bpEach:510,  total:5100  },
+      { size:'6kg',  sizeKg:6,  brand:'K-Gas', qtySent:8,  qtyReturned:0, bpEach:1020, total:8160  },
+    ]
+  }
+];
+
+// =========================================================
+// AUTH
+// =========================================================
+let loginRole = 'cashier';
+function selectRole(r, el) {
+  loginRole = r;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  if (loginRole === 'cashier' && pass === STATE.passwords.cashier) {
+    STATE.role = 'cashier'; launchApp();
+  } else if (loginRole === 'admin' && pass === STATE.passwords.admin) {
+    STATE.role = 'admin'; launchApp();
+  } else {
+    err.textContent = 'Incorrect password. Please try again.';
+    setTimeout(() => err.textContent = '', 3000);
+  }
+}
+function launchApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('topUserName').textContent = STATE.role === 'admin' ? 'Admin / Owner' : 'Jane M. (Cashier)';
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = STATE.role === 'admin' ? 'flex' : 'none');
+  document.getElementById('adminNavLabel').style.display = STATE.role === 'admin' ? 'block' : 'none';
+  renderAll();
+  startClock();
+}
+function doLogout() {
+  STATE.role = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginPass').value = '';
+}
+
+// =========================================================
+// CLOCK
+// =========================================================
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('topClock').textContent = now.toLocaleTimeString('en-KE');
+    document.getElementById('topDate').textContent = now.toLocaleDateString('en-KE', {weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+// =========================================================
+// NAVIGATION
+// =========================================================
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  if (page === 'credit')    renderCredits();
+  if (page === 'customers') renderCustomers();
+  if (page === 'inventory') renderInventory();
+  if (page === 'dispatch')  renderDispatch();
+  if (page === 'pricing')   renderPricing();
+  if (page === 'overheads') renderOverheads();
+  if (page === 'reports')   renderReports();
+}
+function renderAll() {
+  renderProducts();
+  renderCredits();
+  renderCustomers();
+  renderInventory();
+  renderDispatch();
+  if (STATE.role === 'admin') { renderPricing(); renderOverheads(); renderReports(); }
+}
+
+// =========================================================
+// PRODUCTS & SALE
+// =========================================================
+function setCat(cat, el) {
+  STATE.activeCat = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts();
+}
+
+function renderProducts() {
+  const q = (document.getElementById('prodSearch')?.value || '').toLowerCase();
+  let list = STATE.products.filter(p => {
+    const catMatch = STATE.activeCat === 'all' || p.cat === STATE.activeCat;
+    const qMatch = !q || p.name.toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q) || (p.size||'').toLowerCase().includes(q);
+    return catMatch && qMatch;
+  });
+  const grid = document.getElementById('prodGrid');
+  if (!list.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text3);font-size:13px;">No products found</div>'; return; }
+  grid.innerHTML = list.map(p => {
+    const inCart = STATE.cart.find(c => c.id === p.id);
+    const stockClass = p.stock < 1 ? 'badge-red' : p.stock <= p.alert ? 'badge-orange' : 'badge-green';
+    return `<div class="prod-card" onclick="addToCart(${p.id})">
+      <span class="badge ${stockClass}" style="position:absolute;top:8px;right:8px;font-size:9px;padding:2px 6px;">${p.stock < 1 ? 'Out' : p.stock <= p.alert ? 'Low' : 'OK'}</span>
+      <div class="prod-icon">${p.icon}</div>
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-brand">${p.brand || ''}</div>
+      <div class="prod-price">KES ${p.sp.toLocaleString()}</div>
+      ${inCart ? `<div class="in-cart-dot">${inCart.qty}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function addToCart(id) {
+  const prod = STATE.products.find(p => p.id === id);
+  if (!prod || prod.stock < 1) { toast('Out of stock', 'error'); return; }
+  const existing = STATE.cart.find(c => c.id === id);
+  if (existing) { if (existing.qty < prod.stock) existing.qty++; else { toast('Max stock reached', 'error'); return; } }
+  else STATE.cart.push({ ...prod, qty: 1 });
+  renderCart(); renderProducts();
+  toast(prod.name + ' added', 'success');
+}
+function updateQty(id, delta) {
+  const item = STATE.cart.find(c => c.id === id);
+  if (!item) return;
+  item.qty = Math.max(0, item.qty + delta);
+  if (item.qty === 0) STATE.cart = STATE.cart.filter(c => c.id !== id);
+  renderCart(); renderProducts();
+}
+function removeCartItem(id) {
+  STATE.cart = STATE.cart.filter(c => c.id !== id);
+  renderCart(); renderProducts();
+}
+function renderCart() {
+  const container = document.getElementById('orderItems');
+  if (!STATE.cart.length) {
+    container.innerHTML = `<div class="empty-order"><div style="font-size:32px;margin-bottom:8px;">🔵</div><div style="font-weight:500;margin-bottom:4px;">Order is empty</div><div style="font-size:12px;">Click a product to add it</div></div>`;
+    updateOrderTotals(); return;
+  }
+  container.innerHTML = STATE.cart.map(item => `
+    <div class="order-item-row">
+      <div class="oi-info">
+        <div class="oi-name">${item.name}</div>
+        <div class="oi-sub">${item.brand||''} · KES ${item.sp.toLocaleString()} each</div>
+      </div>
+      <div class="oi-qty-ctrl">
+        <button class="qty-b" onclick="updateQty(${item.id},-1)">−</button>
+        <span class="qty-n">${item.qty}</span>
+        <button class="qty-b" onclick="updateQty(${item.id},1)">+</button>
+      </div>
+      <div class="oi-total">KES ${(item.sp * item.qty).toLocaleString()}</div>
+      <span class="oi-del" onclick="removeCartItem(${item.id})">✕</span>
+    </div>`).join('');
+  updateOrderTotals();
+}
+function updateOrderTotals() {
+  const sub = STATE.cart.reduce((s, i) => s + i.sp * i.qty, 0);
+  const delAmt = STATE.deliveryEnabled ? (parseFloat(document.getElementById('delivAmt')?.value) || 0) : 0;
+  const total = sub + delAmt;
+  document.getElementById('sumSub').textContent = 'KES ' + sub.toLocaleString();
+  document.getElementById('delivRow').style.display = STATE.deliveryEnabled ? 'flex' : 'none';
+  document.getElementById('sumDel').textContent = 'KES ' + delAmt.toLocaleString();
+  document.getElementById('sumTotal').textContent = 'KES ' + total.toLocaleString();
+  const btn = document.getElementById('chargeBtn');
+  btn.textContent = 'Charge — KES ' + total.toLocaleString();
+  btn.disabled = STATE.cart.length === 0;
+}
+function toggleDelivery() {
+  STATE.deliveryEnabled = document.getElementById('delivChk').checked;
+  updateOrderTotals();
+}
+function selPay(el, method) {
+  STATE.payMethod = method;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('sel','credit-sel'));
+  el.classList.add(method === 'credit' ? 'credit-sel' : 'sel');
+  document.getElementById('dueFields').style.display = method === 'credit' ? 'block' : 'none';
+  if (method === 'credit') document.getElementById('dueDate').value = new Date().toISOString().split('T')[0];
+}
+function searchCustomer() {
+  const q = document.getElementById('custSearch').value.toLowerCase();
+  const drop = document.getElementById('custDropdown');
+  if (!q) { drop.style.display = 'none'; STATE.selectedCustomer = null; return; }
+  const matches = STATE.customers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  if (!matches.length) { drop.style.display = 'none'; return; }
+  drop.style.display = 'block';
+  drop.innerHTML = matches.map(c => `<div onclick="selectCustomer('${c.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f2f5;font-size:13px;" onmouseover="this.style.background='#f5f8ff'" onmouseout="this.style.background=''">
+    <div style="font-weight:500;">${c.name}</div>
+    <div style="font-size:11px;color:var(--text3);">${c.phone} · Visits: ${c.visits} · Bal: KES ${c.balance.toLocaleString()}</div>
+  </div>`).join('');
+}
+function selectCustomer(id) {
+  const c = STATE.customers.find(x => x.id === id);
+  STATE.selectedCustomer = c;
+  document.getElementById('custSearch').value = c.name + ' — ' + c.phone;
+  document.getElementById('custDropdown').style.display = 'none';
+  toast('Customer: ' + c.name, 'info');
+}
+function processPayment() {
+  if (!STATE.cart.length) return;
+  const sub = STATE.cart.reduce((s, i) => s + i.sp * i.qty, 0);
+  const delAmt = STATE.deliveryEnabled ? (parseFloat(document.getElementById('delivAmt')?.value) || 0) : 0;
+  const total = sub + delAmt;
+  const custName = STATE.selectedCustomer ? STATE.selectedCustomer.name : (document.getElementById('custSearch').value.trim() || 'Walk-in');
+  const itemsStr = STATE.cart.map(i => `${i.name} × ${i.qty}`).join(', ');
+  if (STATE.payMethod === 'credit') {
+    const dueDate = document.getElementById('dueDate').value;
+    const dueNote = document.getElementById('dueNote').value || 'Pay later';
+    STATE.credits.push({ id:'cr'+Date.now(), custId:STATE.selectedCustomer?.id||null, custName, custPhone:STATE.selectedCustomer?.phone||'—', items:itemsStr, amount:total, promise:dueNote, dueDate, status:'pending', created:new Date().toISOString() });
+    if (STATE.selectedCustomer) STATE.selectedCustomer.balance += total;
+    toast('Recorded in Credit Book: KES ' + total.toLocaleString(), 'info');
+  } else {
+    STATE.cart.forEach(item => {
+      const prod = STATE.products.find(p => p.id === item.id);
+      if (prod) prod.stock = Math.max(0, prod.stock - item.qty);
+    });
+    if (STATE.selectedCustomer) {
+      STATE.selectedCustomer.totalBought += total;
+      STATE.selectedCustomer.visits++;
+      STATE.selectedCustomer.lastVisit = new Date().toISOString().split('T')[0];
+    }
+    toast('Payment received — KES ' + total.toLocaleString(), 'success');
+  }
+  STATE.transactions.unshift({ id:STATE.orderCount++, date:new Date().toISOString(), customer:custName, items:itemsStr, total, payment:STATE.payMethod, cashier:STATE.role==='admin'?'Admin':'Jane M.' });
+  showReceipt({ custName, itemsStr, sub, delAmt, total, payMethod:STATE.payMethod });
+  resetSale();
+}
+function resetSale() {
+  STATE.cart = [];
+  STATE.selectedCustomer = null;
+  STATE.deliveryEnabled = false;
+  STATE.payMethod = 'cash';
+  document.getElementById('custSearch').value = '';
+  document.getElementById('delivChk').checked = false;
+  document.getElementById('dueFields').style.display = 'none';
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('sel','credit-sel'));
+  document.querySelector('.pay-btn').classList.add('sel');
+  renderCart(); renderProducts();
+}
+function showReceipt(data) {
+  openModal('Receipt — Hortzman Gas', `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;color:var(--navy);">Hortzman Gas</div>
+      <div style="font-size:11px;color:var(--text3);">Official Receipt · ${new Date().toLocaleString('en-KE')}</div>
+    </div>
+    <hr style="border:none;border-top:1px dashed var(--border);margin:12px 0;">
+    <div style="font-size:13px;line-height:2;">${data.itemsStr.split(', ').map(i=>`<div style="display:flex;justify-content:space-between;"><span>${i}</span></div>`).join('')}</div>
+    <hr style="border:none;border-top:1px dashed var(--border);margin:12px 0;">
+    <div style="font-size:13px;display:flex;flex-direction:column;gap:5px;">
+      <div style="display:flex;justify-content:space-between;"><span>Subtotal</span><span>KES ${data.sub.toLocaleString()}</span></div>
+      ${data.delAmt ? `<div style="display:flex;justify-content:space-between;color:var(--text3);"><span>Delivery</span><span>KES ${data.delAmt.toLocaleString()}</span></div>` : ''}
+      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:var(--navy);margin-top:4px;"><span>Total</span><span>KES ${data.total.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;color:var(--text3);font-size:12px;"><span>Customer</span><span>${data.custName}</span></div>
+      <div style="display:flex;justify-content:space-between;color:var(--text3);font-size:12px;"><span>Payment</span><span>${data.payMethod==='credit'?'🕐 Credit (Due later)':data.payMethod.toUpperCase()}</span></div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Close</button><button class="btn btn-primary" onclick="closeModal()">New Sale</button>`
+  );
+}
+
+// =========================================================
+// CREDIT BOOK
+// =========================================================
+function renderCredits() {
+  const today = new Date().toISOString().split('T')[0];
+  const q = (document.getElementById('creditSearch')?.value||'').toLowerCase();
+  const credits = STATE.credits.filter(c => !q || c.custName.toLowerCase().includes(q) || (c.promise||'').toLowerCase().includes(q));
+  const pending = credits.filter(c => c.status === 'pending');
+  const overdue = pending.filter(c => c.dueDate < today);
+  const dueToday = pending.filter(c => c.dueDate === today);
+  const totalOwed = pending.reduce((s,c) => s + c.amount, 0);
+  document.getElementById('creditMetrics').innerHTML = `
+    <div class="metric-card red"><div class="metric-label">Total Owed</div><div class="metric-val">KES ${totalOwed.toLocaleString()}</div><div class="metric-sub">${pending.length} open entries</div></div>
+    <div class="metric-card accent"><div class="metric-label">Due Today</div><div class="metric-val">${dueToday.length}</div><div class="metric-sub">Need follow-up</div></div>
+    <div class="metric-card red"><div class="metric-label">Overdue</div><div class="metric-val">${overdue.length}</div><div class="metric-sub">Past due date</div></div>
+    <div class="metric-card green"><div class="metric-label">Settled</div><div class="metric-val">${STATE.credits.filter(c=>c.status==='paid').length}</div><div class="metric-sub">All time</div></div>
+  `;
+  document.getElementById('creditTable').innerHTML = credits.length ? credits.map(c => {
+    const rowCls = c.status==='pending' && c.dueDate < today ? 'credit-row-urgent' : c.dueDate===today ? 'credit-row-today' : '';
+    const badge = c.status==='paid' ? '<span class="badge badge-green">Paid</span>' : c.dueDate < today ? '<span class="badge badge-red">Overdue</span>' : c.dueDate===today ? '<span class="badge badge-orange">Due Today</span>' : '<span class="badge badge-blue">Pending</span>';
+    return `<tr class="${rowCls}">
+      <td><div style="font-weight:500;">${c.custName}</div><div style="font-size:11px;color:var(--text3);">${c.custPhone}</div></td>
+      <td style="font-size:12px;max-width:160px;">${c.items}</td>
+      <td style="font-weight:600;color:var(--navy);">KES ${c.amount.toLocaleString()}</td>
+      <td style="font-size:12px;font-style:italic;color:var(--text2);">${c.promise}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${c.dueDate}</td>
+      <td>${badge}</td>
+      <td><div style="display:flex;gap:6px;">
+        ${c.status==='pending'?`<button class="btn btn-sm btn-green" onclick="markCreditPaid('${c.id}')">Mark Paid</button>`:''}
+        <button class="btn btn-sm btn-outline" style="color:var(--red);" onclick="deleteCreditEntry('${c.id}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">No credit entries</td></tr>';
+}
+function markCreditPaid(id) {
+  const c = STATE.credits.find(x => x.id === id);
+  if (c) {
+    c.status = 'paid';
+    const cust = STATE.customers.find(x => x.id === c.custId);
+    if (cust) cust.balance = Math.max(0, cust.balance - c.amount);
+    toast('Marked as paid: KES ' + c.amount.toLocaleString(), 'success');
+    renderCredits();
+  }
+}
+function deleteCreditEntry(id) {
+  STATE.credits = STATE.credits.filter(x => x.id !== id);
+  toast('Entry deleted', 'info'); renderCredits();
+}
+
+// =========================================================
+// CUSTOMERS
+// =========================================================
+function renderCustomers() {
+  const q = (document.getElementById('custPageSearch')?.value||'').toLowerCase();
+  const list = STATE.customers.filter(c => !q || c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  document.getElementById('custTable').innerHTML = list.length ? list.map(c => `<tr>
+    <td style="font-weight:500;">${c.name}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px;">${c.phone}</td>
+    <td style="color:var(--navy);font-weight:500;">KES ${c.totalBought.toLocaleString()}</td>
+    <td>${c.visits}</td>
+    <td style="font-size:12px;color:var(--text3);">${c.lastVisit}</td>
+    <td>${c.balance>0?`<span class="badge badge-red">KES ${c.balance.toLocaleString()}</span>`:'<span class="badge badge-green">Clear</span>'}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="viewCustomer('${c.id}')">View</button></td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">No customers found</td></tr>';
+}
+function openAddCustomer() {
+  openModal('Add Customer', `
+    <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="newCustName" placeholder="Customer name"></div>
+    <div class="form-group"><label class="form-label">Phone Number</label><input class="form-input" id="newCustPhone" placeholder="07XX XXX XXX"></div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="newCustNote" placeholder="e.g. regular, refill only..."></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveNewCustomer()">Add Customer</button>`
+  );
+}
+function saveNewCustomer() {
+  const name = document.getElementById('newCustName')?.value?.trim();
+  if (!name) { toast('Name is required', 'error'); return; }
+  STATE.customers.push({ id:'c'+Date.now(), name, phone:document.getElementById('newCustPhone').value||'—', totalBought:0, visits:0, lastVisit:'—', balance:0 });
+  toast('Customer added: ' + name, 'success'); closeModal(); renderCustomers();
+}
+function viewCustomer(id) {
+  const c = STATE.customers.find(x => x.id === id);
+  const cxTx = STATE.transactions.filter(t => t.customer === c.name);
+  const cxCr = STATE.credits.filter(cr => cr.custId === id && cr.status === 'pending');
+  openModal(c.name, `
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div><div class="metric-label">Phone</div><div style="font-size:15px;font-weight:500;">${c.phone}</div></div>
+      <div><div class="metric-label">Total Purchased</div><div style="font-size:15px;font-weight:600;color:var(--navy);">KES ${c.totalBought.toLocaleString()}</div></div>
+      <div><div class="metric-label">Visits</div><div style="font-size:15px;font-weight:500;">${c.visits}</div></div>
+      <div><div class="metric-label">Balance Owed</div><div style="font-size:15px;font-weight:600;color:${c.balance>0?'var(--red)':'var(--green)'}">KES ${c.balance.toLocaleString()}</div></div>
+    </div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px;color:var(--navy);">Recent Transactions</div>
+    ${cxTx.length ? cxTx.slice(0,5).map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between;"><span>${new Date(t.date).toLocaleDateString('en-KE')} · ${t.items}</span><span style="font-weight:500;">KES ${t.total.toLocaleString()}</span></div>`).join('') : '<div style="font-size:12px;color:var(--text3);padding:10px 0;">No transactions yet</div>'}
+    ${cxCr.length ? `<div style="font-size:13px;font-weight:500;margin:12px 0 8px;color:var(--red);">Outstanding Credit</div>${cxCr.map(cr=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between;"><span>${cr.items} — ${cr.promise}</span><span style="font-weight:600;color:var(--red);">KES ${cr.amount.toLocaleString()}</span></div>`).join('')}` : ''}`,
+    `<button class="btn btn-outline" onclick="closeModal()">Close</button>`
+  );
+}
+
+// =========================================================
+// INVENTORY
+// =========================================================
+function invTab(cat, el) {
+  STATE.activeInvTab = cat;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderInventory();
+}
+function renderInventory() {
+  let list = STATE.activeInvTab === 'all' ? STATE.products : STATE.products.filter(p => p.cat === STATE.activeInvTab);
+  document.getElementById('invTable').innerHTML = list.map(p => {
+    const margin = p.sp - p.bp;
+    const marginPct = p.sp > 0 ? Math.round((margin / p.sp) * 100) : 0;
+    const stockBadge = p.stock < 1 ? 'badge-red' : p.stock <= p.alert ? 'badge-orange' : 'badge-green';
+    const typeBadge = p.type === 'refill' ? 'badge-blue' : p.type === 'exchange' ? 'badge-purple' : p.type === 'new' ? 'badge-green' : 'badge-gray';
+    return `<tr>
+      <td><div style="font-weight:500;">${p.icon} ${p.name}</div><div style="font-size:11px;color:var(--text3);">${p.brand||''} ${p.size?'· '+p.size:''}</div></td>
+      <td><span class="badge ${typeBadge}">${p.type||p.cat}</span></td>
+      <td><span class="badge ${stockBadge}">${p.stock}</span></td>
+      <td style="color:var(--text3);font-size:12px;">${p.alert}</td>
+      <td style="font-family:'DM Mono',monospace;">KES ${p.bp.toLocaleString()}</td>
+      <td style="font-family:'DM Mono',monospace;">KES ${p.sp.toLocaleString()}</td>
+      <td style="color:${margin>0?'var(--green)':'var(--red)'};font-weight:500;">+KES ${margin.toLocaleString()} (${marginPct}%)</td>
+      <td><button class="btn btn-sm btn-outline" onclick="editStock(${p.id})">Edit</button></td>
+    </tr>`;
+  }).join('');
+}
+function editStock(id) {
+  const p = STATE.products.find(x => x.id === id);
+  openModal('Adjust Stock — ' + p.name, `
+    <div class="form-group"><label class="form-label">Current Stock</label><input class="form-input" value="${p.stock}" id="newStock" type="number" min="0"></div>
+    <div class="form-group"><label class="form-label">Low Stock Alert (warn below)</label><input class="form-input" value="${p.alert}" id="newAlert" type="number" min="0"></div>
+    <div class="form-group"><label class="form-label">Reason / Notes</label><input class="form-input" id="stockNote" placeholder="e.g. new delivery, damage, daily count..."></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveStock(${id})">Save</button>`
+  );
+}
+function saveStock(id) {
+  const p = STATE.products.find(x => x.id === id);
+  const s = parseInt(document.getElementById('newStock').value);
+  const a = parseInt(document.getElementById('newAlert').value);
+  if (!isNaN(s)) p.stock = s;
+  if (!isNaN(a)) p.alert = a;
+  toast('Stock updated for ' + p.name, 'success'); closeModal(); renderInventory();
+}
+function openStockAdjust() {
+  const lpg = STATE.products.filter(p => p.cat === 'lpg' || p.cat === 'refill');
+  openModal('Quick Stock Adjust', `
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Select a product to edit:</div>
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto;">
+      ${lpg.map(p=>`<button class="btn btn-outline" style="justify-content:flex-start;text-align:left;" onclick="closeModal();editStock(${p.id})">${p.icon} ${p.name} <span class="badge badge-gray" style="margin-left:auto;">${p.stock} in stock</span></button>`).join('')}
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Close</button>`
+  );
+}
+function openDailyCount() {
+  openModal('📋 Daily Stock Count', `
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Enter actual count. Leave blank to skip.</div>
+    <div style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
+      ${STATE.products.filter(p=>p.cat==='lpg'||p.cat==='refill').map(p=>`
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="flex:1;font-size:13px;">${p.icon} ${p.name}</span>
+          <span style="font-size:11px;color:var(--text3);min-width:70px;">System: ${p.stock}</span>
+          <input type="number" id="dc_${p.id}" placeholder="Count" style="width:80px;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;" min="0">
+        </div>`).join('')}
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveDailyCount()">Save Count</button>`
+  );
+}
+function saveDailyCount() {
+  let updated = 0;
+  STATE.products.filter(p=>p.cat==='lpg'||p.cat==='refill').forEach(p => {
+    const inp = document.getElementById('dc_'+p.id);
+    if (inp && inp.value !== '') { p.stock = parseInt(inp.value); updated++; }
+  });
+  toast(`Daily count saved — ${updated} items updated`, 'success'); closeModal(); renderInventory();
+}
+
+// =========================================================
+// REFILL DISPATCH
+// =========================================================
+function renderDispatch() {
+  const dispatched = STATE.dispatches.filter(d => d.status === 'dispatched');
+  const totalOut = STATE.dispatches.reduce((s,d) => s + d.items.reduce((ss,i) => ss + i.qtySent, 0), 0);
+  const totalCost = STATE.dispatches.reduce((s,d) => s + d.items.reduce((ss,i) => ss + i.total, 0), 0);
+  document.getElementById('dispatchMetrics').innerHTML = `
+    <div class="metric-card accent"><div class="metric-label">Awaiting Return</div><div class="metric-val">${dispatched.length}</div><div class="metric-sub">Active dispatches</div></div>
+    <div class="metric-card teal"><div class="metric-label">Cylinders Out</div><div class="metric-val">${dispatched.reduce((s,d)=>s+d.items.reduce((ss,i)=>ss+i.qtySent,0),0)}</div><div class="metric-sub">Currently at depot</div></div>
+    <div class="metric-card"><div class="metric-label">Total Dispatched</div><div class="metric-val">${totalOut}</div><div class="metric-sub">All time</div></div>
+    <div class="metric-card green"><div class="metric-label">Total Refill Cost</div><div class="metric-val">KES ${totalCost.toLocaleString()}</div><div class="metric-sub">All time</div></div>
+  `;
+  document.getElementById('dispatchTable').innerHTML = STATE.dispatches.length ? STATE.dispatches.map(d => {
+    const summary = d.items.map(i=>`${i.qtySent}× ${i.size}${i.brand&&i.brand!=='Any'?' ('+i.brand+')':''}`).join(', ');
+    const totalCostD = d.items.reduce((s,i)=>s+i.total,0);
+    const statusCls = 'dispatch-status-' + d.status;
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${d.date}</td>
+      <td style="font-weight:500;">${d.supplier||'—'}</td>
+      <td style="font-size:12px;">${summary}</td>
+      <td style="font-weight:600;color:var(--navy);">KES ${totalCostD.toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--text3);">${d.expectedBack||'—'}</td>
+      <td><span class="badge ${statusCls}">${d.status.charAt(0).toUpperCase()+d.status.slice(1)}</span></td>
+      <td><div style="display:flex;gap:6px;">
+        ${d.status==='dispatched'?`<button class="btn btn-sm btn-green" onclick="markDispatchReturned('${d.id}')">Mark Returned</button>`:''}
+        <button class="btn btn-sm btn-outline" onclick="viewDispatch('${d.id}')">View</button>
+      </div></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">No dispatches recorded yet</td></tr>';
+}
+function openNewDispatch() {
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now()+86400000).toISOString().split('T')[0];
+  const sizes = [
+    { size:'3kg',  sizeKg:3  },
+    { size:'6kg',  sizeKg:6  },
+    { size:'13kg', sizeKg:13 },
+    { size:'50kg', sizeKg:50 },
+  ];
+  const bpPerKg = STATE.refillBpPerKg;
+  openModal('New Refill Dispatch', `
+    <div class="form-row" style="margin-bottom:14px;">
+      <div class="form-group" style="margin:0;"><label class="form-label">Date Sent *</label><input class="form-input" type="date" id="dspDate" value="${today}"></div>
+      <div class="form-group" style="margin:0;"><label class="form-label">Expected Back</label><input class="form-input" type="date" id="dspExpected" value="${tomorrow}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Supplier / Depot Name</label><input class="form-input" id="dspSupplier" placeholder="e.g. K-Gas Depot Nairobi"></div>
+    <div class="form-group"><label class="form-label">Brand of Cylinders</label><input class="form-input" id="dspBrand" placeholder="e.g. K-Gas, TotalGaz, Mix..."></div>
+    <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;">Cylinders being sent (refill cost: KES ${bpPerKg}/kg)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      ${sizes.map(s=>`
+        <div style="background:#f7fafd;border:1px solid var(--border);border-radius:9px;padding:10px 12px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:4px;">${s.size} cylinder</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Cost: KES ${(bpPerKg * s.sizeKg).toLocaleString()} each</div>
+          <input type="number" id="dsp_${s.size}" placeholder="Qty to send" min="0" style="width:100%;padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;">
+        </div>`).join('')}
+    </div>
+    <div class="form-group" style="margin-top:14px;"><label class="form-label">Notes</label><input class="form-input" id="dspNotes" placeholder="Any notes..."></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveNewDispatch()">Record Dispatch</button>`
+  );
+}
+function saveNewDispatch() {
+  const date = document.getElementById('dspDate').value;
+  const expected = document.getElementById('dspExpected').value;
+  const supplier = document.getElementById('dspSupplier').value.trim();
+  const brand = document.getElementById('dspBrand').value.trim() || 'Any';
+  const notes = document.getElementById('dspNotes').value.trim();
+  const bpPerKg = STATE.refillBpPerKg;
+  const sizes = [{size:'3kg',sizeKg:3},{size:'6kg',sizeKg:6},{size:'13kg',sizeKg:13},{size:'50kg',sizeKg:50}];
+  const items = [];
+  sizes.forEach(s => {
+    const qty = parseInt(document.getElementById('dsp_'+s.size)?.value||0);
+    if (qty > 0) {
+      const bpEach = bpPerKg * s.sizeKg;
+      items.push({ size:s.size, sizeKg:s.sizeKg, brand, qtySent:qty, qtyReturned:0, bpEach, total:bpEach*qty });
+    }
+  });
+  if (!date) { toast('Please enter a date', 'error'); return; }
+  if (!items.length) { toast('Enter at least one cylinder qty', 'error'); return; }
+  STATE.dispatches.unshift({ id:'d'+Date.now(), date, expectedBack:expected, actualBack:null, supplier, notes, status:'dispatched', createdBy:STATE.role==='admin'?'Admin':'Jane M.', items });
+  toast('Dispatch recorded', 'success'); closeModal(); renderDispatch();
+}
+function markDispatchReturned(id) {
+  const d = STATE.dispatches.find(x => x.id === id);
+  if (!d) return;
+  openModal('Mark Returned — ' + d.date, `
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Enter the quantity returned for each size:</div>
+    ${d.items.map(i=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;font-size:13px;font-weight:500;">${i.size} (sent: ${i.qtySent})</span>
+      <input type="number" id="ret_${i.size}" value="${i.qtySent}" min="0" max="${i.qtySent}" style="width:80px;padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;">
+    </div>`).join('')}
+    <div class="form-group" style="margin-top:14px;"><label class="form-label">Actual Return Date</label><input class="form-input" type="date" id="retDate" value="${new Date().toISOString().split('T')[0]}"></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="confirmReturn('${id}')">Confirm Return</button>`
+  );
+}
+function confirmReturn(id) {
+  const d = STATE.dispatches.find(x => x.id === id);
+  if (!d) return;
+  const retDate = document.getElementById('retDate').value;
+  let allFull = true;
+  d.items.forEach(i => {
+    const qty = parseInt(document.getElementById('ret_'+i.size)?.value||i.qtySent);
+    i.qtyReturned = qty;
+    if (qty < i.qtySent) allFull = false;
+    // Update refill stock
+    const refillProd = STATE.products.find(p => p.isRefill && p.size === i.size);
+    if (refillProd) refillProd.stock = (refillProd.stock === 99 ? qty : refillProd.stock + qty);
+  });
+  d.status = allFull ? 'returned' : 'partial';
+  d.actualBack = retDate;
+  toast('Dispatch marked as ' + d.status, 'success');
+  closeModal(); renderDispatch(); renderInventory();
+}
+function viewDispatch(id) {
+  const d = STATE.dispatches.find(x => x.id === id);
+  if (!d) return;
+  const totalCost = d.items.reduce((s,i)=>s+i.total,0);
+  openModal('Dispatch — ' + d.date, `
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div><div class="metric-label">Date Sent</div><div style="font-size:14px;font-weight:500;">${d.date}</div></div>
+      <div><div class="metric-label">Supplier</div><div style="font-size:14px;font-weight:500;">${d.supplier||'—'}</div></div>
+      <div><div class="metric-label">Expected Back</div><div style="font-size:14px;">${d.expectedBack||'—'}</div></div>
+      <div><div class="metric-label">Actual Return</div><div style="font-size:14px;">${d.actualBack||'Not yet'}</div></div>
+      <div><div class="metric-label">Status</div><div><span class="badge dispatch-status-${d.status}">${d.status}</span></div></div>
+      <div><div class="metric-label">Total Cost</div><div style="font-size:14px;font-weight:600;color:var(--navy);">KES ${totalCost.toLocaleString()}</div></div>
+    </div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px;color:var(--navy);">Cylinder Details</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Size</th><th>Brand</th><th>Sent</th><th>Returned</th><th>Cost Each</th><th>Total</th></tr></thead>
+        <tbody>${d.items.map(i=>`<tr>
+          <td style="font-weight:500;">${i.size}</td>
+          <td>${i.brand}</td>
+          <td>${i.qtySent}</td>
+          <td>${d.status==='dispatched'?'—':i.qtyReturned}</td>
+          <td style="font-family:'DM Mono',monospace;">KES ${i.bpEach.toLocaleString()}</td>
+          <td style="font-weight:500;">KES ${i.total.toLocaleString()}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${d.notes?`<div style="margin-top:12px;font-size:12px;color:var(--text3);">Notes: ${d.notes}</div>`:''}`,
+    `<button class="btn btn-outline" onclick="closeModal()">Close</button>`
+  );
+}
+
+// =========================================================
+// PRICING (ADMIN)
+// =========================================================
+function applyRefillBP() {
+  const val = parseFloat(document.getElementById('refillBpPerKg').value);
+  if (isNaN(val) || val < 1) { toast('Enter a valid price per kg', 'error'); return; }
+  STATE.refillBpPerKg = val;
+  STATE.products.filter(p => p.isRefill).forEach(p => { p.bp = Math.round(val * p.sizeKg); });
+  updateRefillPreview();
+  toast('Refill buying prices updated to KES ' + val + '/kg', 'success');
+  renderPricing(); renderInventory(); renderProducts();
+}
+function updateRefillPreview() {
+  const val = parseFloat(document.getElementById('refillBpPerKg')?.value || STATE.refillBpPerKg);
+  const el = document.getElementById('refillBpPreview');
+  if (el) el.innerHTML = [3,6,13,50].map(kg=>`<div>· ${kg}kg → KES ${Math.round(val*kg).toLocaleString()}</div>`).join('');
+}
+function renderPricing() {
+  updateRefillPreview();
+  const q = (document.getElementById('pricingSearch')?.value||'').toLowerCase();
+  const list = q ? STATE.products.filter(p=>p.name.toLowerCase().includes(q)||p.brand?.toLowerCase().includes(q)) : STATE.products;
+  document.getElementById('pricingTable').innerHTML = list.map(p => {
+    const margin = p.sp - p.bp;
+    const pct = p.sp > 0 ? Math.round((margin / p.sp) * 100) : 0;
+    const isRefillRow = p.isRefill;
+    return `<tr>
+      <td><div style="font-weight:500;">${p.icon} ${p.name}</div>${p.size?`<div style="font-size:11px;color:var(--text3);">${p.brand} · ${p.size}</div>`:''}</td>
+      <td><span class="badge badge-gray">${p.type||p.cat}</span>${isRefillRow?` <span class="badge badge-blue" style="margin-left:2px;">auto-BP</span>`:''}</td>
+      <td><input type="number" id="bp_${p.id}" value="${p.bp}" ${isRefillRow?'readonly style="width:90px;padding:6px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:\'DM Mono\',monospace;background:#f5f7fa;color:var(--text3);"':'style="width:90px;padding:6px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:\'DM Mono\',monospace;"'}></td>
+      <td><input type="number" id="sp_${p.id}" value="${p.sp}" style="width:90px;padding:6px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:'DM Mono',monospace;"></td>
+      <td id="margin_${p.id}" style="color:${margin>0?'var(--green)':'var(--red)'};font-weight:500;font-family:'DM Mono',monospace;">${margin>=0?'+':''}${margin.toLocaleString()}</td>
+      <td id="pct_${p.id}" style="color:var(--text2);font-size:12px;">${pct}%</td>
+      <td><button class="btn btn-sm btn-green" onclick="savePrice(${p.id})">Save</button></td>
+    </tr>`;
+  }).join('');
+}
+function savePrice(id) {
+  const p = STATE.products.find(x => x.id === id);
+  const bp = parseFloat(document.getElementById('bp_'+id).value);
+  const sp = parseFloat(document.getElementById('sp_'+id).value);
+  if (isNaN(bp) || isNaN(sp) || sp < bp) { toast('Selling price must be ≥ buying price', 'error'); return; }
+  p.bp = bp; p.sp = sp;
+  const margin = sp - bp;
+  const pct = sp > 0 ? Math.round((margin / sp) * 100) : 0;
+  document.getElementById('margin_'+id).textContent = (margin>=0?'+':'') + margin.toLocaleString();
+  document.getElementById('margin_'+id).style.color = margin>0?'var(--green)':'var(--red)';
+  document.getElementById('pct_'+id).textContent = pct + '%';
+  toast('Price saved for ' + p.name, 'success');
+  renderProducts();
+}
+
+// =========================================================
+// OVERHEADS (ADMIN)
+// =========================================================
+function renderOverheads() {
+  const total = STATE.overheads.reduce((s,o) => s + o.amount, 0);
+  document.getElementById('overheadTotal').textContent = 'KES ' + total.toLocaleString();
+  document.getElementById('overheadList').innerHTML = STATE.overheads.map(o => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;font-size:13px;">${o.name}</span>
+      <input type="number" value="${o.amount}" id="oh_${o.id}" style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;" onchange="updateOverhead(${o.id})">
+      <span style="font-size:12px;color:var(--text3);min-width:28px;">KES</span>
+      <span style="cursor:pointer;color:var(--red);font-size:13px;padding:3px;" onclick="deleteOverhead(${o.id})">✕</span>
+    </div>`).join('');
+  const daily = Math.ceil(total / 30);
+  const weekly = Math.ceil(total / 4.33);
+  document.getElementById('overheadCalc').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${[['Daily target to break even',daily],['Weekly',weekly],['Monthly',total],['6 Months',total*6],['Full Year',total*12]].map(([label,val])=>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg);border-radius:8px;">
+          <span style="font-size:13px;color:var(--text2);">${label}</span>
+          <span style="font-size:14px;font-weight:600;color:var(--navy);">KES ${val.toLocaleString()}</span>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('overheadProjections').innerHTML = `
+    <div class="metric-grid" style="margin:0;">
+      <div class="metric-card"><div class="metric-label">Daily need</div><div class="metric-val">KES ${daily.toLocaleString()}</div><div class="metric-sub">To cover overheads</div></div>
+      <div class="metric-card"><div class="metric-label">Weekly need</div><div class="metric-val">KES ${weekly.toLocaleString()}</div></div>
+      <div class="metric-card accent"><div class="metric-label">Monthly</div><div class="metric-val">KES ${total.toLocaleString()}</div><div class="metric-sub">Fixed costs</div></div>
+      <div class="metric-card"><div class="metric-label">6 Months</div><div class="metric-val">KES ${(total*6).toLocaleString()}</div></div>
+      <div class="metric-card"><div class="metric-label">Full Year</div><div class="metric-val">KES ${(total*12).toLocaleString()}</div></div>
+    </div>`;
+}
+function updateOverhead(id) {
+  const o = STATE.overheads.find(x => x.id === id);
+  const v = parseFloat(document.getElementById('oh_'+id).value);
+  if (!isNaN(v)) { o.amount = v; renderOverheads(); }
+}
+function addOverhead() {
+  openModal('Add Overhead Cost', `
+    <div class="form-group"><label class="form-label">Cost Name *</label><input class="form-input" id="ohName" placeholder="e.g. Waste disposal, Insurance..."></div>
+    <div class="form-group"><label class="form-label">Monthly Amount (KES) *</label><input class="form-input" type="number" id="ohAmt" placeholder="0"></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveOverhead()">Add</button>`
+  );
+}
+function saveOverhead() {
+  const name = document.getElementById('ohName').value.trim();
+  const amt = parseFloat(document.getElementById('ohAmt').value);
+  if (!name || isNaN(amt)) { toast('Fill all fields', 'error'); return; }
+  STATE.overheads.push({ id:Date.now(), name, amount:amt, frequency:'monthly' });
+  toast('Overhead added', 'success'); closeModal(); renderOverheads();
+}
+function deleteOverhead(id) {
+  STATE.overheads = STATE.overheads.filter(o => o.id !== id);
+  renderOverheads();
+}
+
+// =========================================================
+// REPORTS (ADMIN)
+// =========================================================
+function renderReports() {
+  const txs = STATE.transactions;
+  const totalRevenue = txs.reduce((s,t) => s + t.total, 0);
+  const overhead = STATE.overheads.reduce((s,o) => s + o.amount, 0);
+  const creditTotal = STATE.credits.filter(c=>c.status==='pending').reduce((s,c)=>s+c.amount,0);
+  document.getElementById('reportMetrics').innerHTML = `
+    <div class="metric-card accent"><div class="metric-label">Total Sales</div><div class="metric-val">KES ${totalRevenue.toLocaleString()}</div></div>
+    <div class="metric-card green"><div class="metric-label">Transactions</div><div class="metric-val">${txs.length}</div></div>
+    <div class="metric-card red"><div class="metric-label">Total Owed (Credit)</div><div class="metric-val">KES ${creditTotal.toLocaleString()}</div></div>
+    <div class="metric-card teal"><div class="metric-label">Monthly Overheads</div><div class="metric-val">KES ${overhead.toLocaleString()}</div></div>
+    <div class="metric-card"><div class="metric-label">Avg per Transaction</div><div class="metric-val">KES ${txs.length ? Math.round(totalRevenue/txs.length).toLocaleString() : 0}</div></div>
+    <div class="metric-card"><div class="metric-label">Revenue vs Overhead</div><div class="metric-val" style="font-size:16px;color:${totalRevenue>=overhead?'var(--green)':'var(--red)'}">${totalRevenue>=overhead?'✓ Covered':'⚠ Short'}</div><div class="metric-sub">Need KES ${overhead.toLocaleString()}/mo</div></div>
+  `;
+  // Payment method breakdown
+  const byMethod = {};
+  txs.forEach(t => { byMethod[t.payment] = (byMethod[t.payment]||0) + t.total; });
+  document.getElementById('catBreakdown').innerHTML = Object.entries(byMethod).length ? `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${Object.entries(byMethod).map(([method,val])=>{
+        const pct = Math.round((val/(totalRevenue||1))*100);
+        return `<div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>${method.toUpperCase()}</span><span style="font-weight:500;">KES ${val.toLocaleString()} (${pct}%)</span></div>
+          <div style="height:6px;background:var(--bg);border-radius:3px;"><div style="height:100%;width:${pct}%;background:var(--navy);border-radius:3px;"></div></div>
+        </div>`;
+      }).join('')}
+    </div>` : '<div style="font-size:13px;color:var(--text3);">No sales data yet</div>';
+  // Top products
+  const prodRev = {};
+  txs.forEach(t => { t.items.split(',').forEach(s=>{ const name=s.split('×')[0].trim(); prodRev[name]=(prodRev[name]||0)+t.total; }); });
+  const sorted = Object.entries(prodRev).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('topProducts').innerHTML = sorted.length ? `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${sorted.map(([name,val],i)=>`<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;color:var(--text3);min-width:16px;">${i+1}.</span><span style="flex:1;font-size:13px;">${name}</span><span style="font-size:13px;font-weight:500;color:var(--navy);">KES ${val.toLocaleString()}</span></div>`).join('')}
+    </div>` : '<div style="font-size:13px;color:var(--text3);">No sales data yet</div>';
+  // TX table
+  document.getElementById('txTable').innerHTML = txs.length ? txs.map(t=>`<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:12px;">#${String(t.id).padStart(3,'0')}</td>
+    <td style="font-size:12px;">${new Date(t.date).toLocaleString('en-KE')}</td>
+    <td style="font-weight:500;">${t.customer}</td>
+    <td style="font-size:12px;max-width:180px;color:var(--text2);">${t.items}</td>
+    <td style="font-weight:600;color:var(--navy);">KES ${t.total.toLocaleString()}</td>
+    <td><span class="badge ${t.payment==='credit'?'badge-blue':t.payment==='mpesa'?'badge-green':'badge-gray'}">${t.payment.toUpperCase()}</span></td>
+    <td style="font-size:12px;color:var(--text3);">${t.cashier}</td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">No transactions recorded yet</td></tr>';
+}
+
+// =========================================================
+// SETTINGS
+// =========================================================
+function savePasswords() {
+  const cp = document.getElementById('newCashierPass').value;
+  const ap = document.getElementById('newAdminPass').value;
+  if (cp) STATE.passwords.cashier = cp;
+  if (ap) STATE.passwords.admin = ap;
+  toast('Passwords updated', 'success');
+  document.getElementById('newCashierPass').value = '';
+  document.getElementById('newAdminPass').value = '';
+}
+function saveSbSettings() {
+  const url = document.getElementById('sbUrl').value;
+  const key = document.getElementById('sbKey').value;
+  if (url && key) {
+    document.getElementById('sbStatus').textContent = '✓ Connected to Supabase: ' + url;
+    document.getElementById('sbStatus').style.color = 'var(--green)';
+    toast('Supabase settings saved', 'success');
+  } else { toast('Please enter both URL and key', 'error'); }
+}
+
+// =========================================================
+// MODAL
+// =========================================================
+function openModal(title, body, footer) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalFooter').innerHTML = footer || '';
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+// =========================================================
+// TOAST
+// =========================================================
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// =========================================================
+// INIT
+// =========================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  // init refill preview
+  updateRefillPreview();
+});
+</script>
+</body>
+</html>
